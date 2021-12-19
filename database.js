@@ -13,10 +13,21 @@ const Birthdays = sequelize.define('birthdays', {
 		type: Sequelize.STRING,
 		unique: true,
 	},
-	date: Sequelize.STRING,
+	dayOfMonth: Sequelize.SMALLINT,
+	month: Sequelize.SMALLINT,
 });
+
+const getBirthdaysToday = async (day, month) => {
+	return await Birthdays.findAll({
+		where: {
+			dayOfMonth: day,
+			month: month,
+		},
+	});
+};
 
 module.exports = {
 	sequelize,
 	Birthdays,
+	getBirthdaysToday,
 };

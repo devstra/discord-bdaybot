@@ -2,7 +2,7 @@ const {
 	SlashCommandBuilder,
 	memberNicknameMention,
 } = require('@discordjs/builders');
-const moment = require('moment-timezone');
+const { dateToFRString } = require('../utils');
 const { Birthdays } = require('../database');
 
 module.exports = {
@@ -69,12 +69,14 @@ module.exports = {
 			try {
 				await Birthdays.create({
 					userId: user.id,
-					date: moment
-						.tz(`${month}/${day}/2021`, 'Europe/France')
-						.format(),
+					dayOfMonth: day,
+					month: month,
 				});
 				return interaction.reply({
-					content: `${user.username}'s birthday (${day}/${month}) was added.`,
+					content: `${user.username}'s birthday (${dateToFRString(
+						day,
+						month
+					)}) was added.`,
 					ephemeral: true,
 				});
 			} catch (error) {
@@ -110,23 +112,30 @@ module.exports = {
 			});
 		} else if (interaction.options.getSubcommand() === 'list') {
 			const birthdayList = await Birthdays.findAll();
-			const birthdayString =
-				birthdayList
-					.map((b) => ({
-						username: memberNicknameMention(b.userId),
-						date: new Date(b.date).toLocaleDateString('fr-FR', {
-							month: 'long',
-							day: 'numeric',
-						}),
-					}))
-					.map((b) => `${b.username} -> ${b.date}`)
-					.join('\n') || 'No birthdays to display';
-			console.log(birthdayList);
-			console.log(birthdayString);
-			return interaction.reply({
-				content: birthdayString,
-				ephemeral: true,
-			});
+
+			try {
+				const birthdayString =
+					birthdayList
+						.map(
+							(b) =>
+								`${memberNicknameMention(
+									b.userId
+								)} -> ${dateToFRString(b.dayOfMonth, b.month)}`
+						)
+						.join('\n') || 'No birthdays to display';
+				console.log(birthdayList);
+				console.log(birthdayString);
+				return interaction.reply({
+					content: birthdayString,
+					ephemeral: true,
+				});
+			} catch (error) {
+				console.error(error);
+				return interaction.reply({
+					content: 'Invalid date',
+					ephemeral: true,
+				});
+			}
 		} else {
 			return interaction.reply({
 				content: 'Not a valid command.',
