@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { Birthdays, getBirthdaysToday } = require('./database');
+const moment = require('moment-timezone');
 const { Client, Collection, Intents } = require('discord.js');
 const { token } = require('./config.json');
 const cron = require('node-cron');
@@ -39,14 +40,11 @@ client.on('interactionCreate', async (interaction) => {
 	}
 });
 
+// every day at 8 AM
+// '30 8 * * *'
 cron.schedule('*/30 * * * * *', () => {
-	// '30 8 * * *'
-	// TODO: fetch current date in Paris timezone and pass it to getBirthdaysToday()
-	// to check if today is someone's birthday
-	const today = new Date();
-	console.log(today.getDate());
-	console.log(today.getMonth());
-	getBirthdaysToday(24, 7).then(console.log);
+	const today = moment.utc().tz('Europe/Paris');
+	getBirthdaysToday(today.date(), today.month() + 1).then(); // create an event that sends birthday message
 });
 
 client.login(token);
