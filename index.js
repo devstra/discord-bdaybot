@@ -1,4 +1,7 @@
 const fs = require('fs');
+const {
+	memberNicknameMention,
+} = require('@discordjs/builders');
 const { Birthdays, getBirthdaysToday } = require('./database');
 const moment = require('moment-timezone');
 const { Client, Collection, Intents } = require('discord.js');
@@ -44,7 +47,13 @@ client.on('interactionCreate', async (interaction) => {
 // '30 8 * * *'
 cron.schedule('*/30 * * * * *', () => {
 	const today = moment.utc().tz('Europe/Paris');
-	getBirthdaysToday(today.date(), today.month() + 1).then(); // create an event that sends birthday message
+	getBirthdaysToday(today.date(), today.month() + 1).then(bdays => {
+
+		bdays.forEach(b => {
+			birthdayChannel.send(`@everyone C'est l'anniversaire de ${memberNicknameMention(b.userId)} aujourd'hui 🥳!`);
+		});
+	});
+
 });
 
 client.login(token);
